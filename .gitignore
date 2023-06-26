@@ -1,5 +1,5 @@
 *.pyc
-data/CIFAR10/
+data/CIFAR10/*
 __pycache__/
 *.pth
 *.jpg
