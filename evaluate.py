@@ -3,6 +3,8 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 # from utils.dice_score import multiclass_dice_coeff, dice_coeff
+import warnings
+warnings.filterwarnings("ignore")
 
 
 @torch.inference_mode()
@@ -20,8 +22,8 @@ def evaluate(net, dataloader, device, amp):
             # predict the mask
             pred = net(inputs)
             _, predicted = torch.max(pred.data, 1)
-            precision, recall, f1, support = precision_recall_fscore_support(labels, predicted, average='weighted')
-            f1_score += f1
+            precision, recall, f1, support = precision_recall_fscore_support(labels.cpu(), predicted.cpu(), average='weighted')
+            f1_score += precision
             # print(labels)
     net.train()
     return f1_score / max(num_val_batches, 1)

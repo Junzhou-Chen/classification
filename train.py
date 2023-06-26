@@ -32,9 +32,12 @@ def train_model(
     n_val = len(val_set)
     n_train = len(train_set)
 
-    loader_args = dict(batch_size=batch_size, num_workers=os.cpu_count(), pin_memory=True)
-    train_loader = DataLoader(train_set, shuffle=True, **loader_args)
-    val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
+    train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(dataset=val_set, batch_size=batch_size, shuffle=False)
+
+    # loader_args = dict(batch_size=batch_size, num_workers=os.cpu_count(), pin_memory=True)
+    # train_loader = DataLoader(train_set, shuffle=True, **loader_args)
+    # val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     # (Initialize logging)
     # experiment = wandb.init(project='HARUNet', resume='allow', anonymous='must')
@@ -55,7 +58,7 @@ def train_model(
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
     optimizer = optim.RMSprop(model.parameters(),
                               lr=learning_rate, weight_decay=weight_decay, momentum=momentum, foreach=True)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=20)  # goal: maximize Dice score
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=10)  # goal: maximize Dice score
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.CrossEntropyLoss()
     global_step = 0

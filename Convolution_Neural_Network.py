@@ -12,8 +12,8 @@ import torch.optim as optim
 import torchvision
 from train import train_model
 from torch.utils.data import DataLoader
-
-
+from NetWork import Vgg16_net
+from torchvision import models
 # todo Bottleneck
 class Bottleneck(nn.Module):
     """
@@ -160,8 +160,8 @@ def read_data():
 def get_args():
     parser = argparse.ArgumentParser(description='Train the HARUNet on images and target masks')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=100, help='Number of epochs')
-    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=16, help='Batch size')
-    parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-4,
+    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=64, help='Batch size')
+    parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-6,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
     parser.add_argument('--amp', action='store_true', default=True, help='Use mixed precision')
@@ -185,9 +185,8 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
-
-    model = resnet50()
-
+    model = resnet50(10)
+    
     model.to(device=device)
 
     try:
