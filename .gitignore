@@ -1,0 +1,9 @@
+*.pyc
+data/CIFAR10/
+__pycache__/
+*.pth
+*.jpg
+*.png
+venv/
+.idea/
+wandb/
