@@ -13,7 +13,7 @@ from torch import optim
 from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 from evaluate import evaluate
-# import wandb
+import wandb
 
 
 def train_model(
@@ -40,10 +40,10 @@ def train_model(
     # val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
 
     # (Initialize logging)
-    # experiment = wandb.init(project='HARUNet', resume='allow', anonymous='must')
-    # experiment.config.update(
-    #     dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate, amp=amp)
-    # )
+    experiment = wandb.init(project='ResNet', resume='allow', anonymous='must')
+    experiment.config.update(
+        dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate, amp=amp)
+    )
 
     logging.info(f'''Starting training:
             Epochs:          {epochs}
@@ -58,14 +58,15 @@ def train_model(
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
     optimizer = optim.RMSprop(model.parameters(),
                               lr=learning_rate, weight_decay=weight_decay, momentum=momentum, foreach=True)
+    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=10)  # goal: maximize Dice score
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.CrossEntropyLoss()
     global_step = 0
+    best_score = -1
     for epoch in range(1, epochs + 1):
         model.train()
         epoch_loss = 0
-        best_score = -1
         with tqdm(total=n_train, desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
             for idx, (inputs, labels) in enumerate(train_loader):
                 inputs = inputs.cuda()
@@ -85,11 +86,11 @@ def train_model(
                 pbar.update(inputs.shape[0])
                 global_step += 1
                 epoch_loss += loss.item()
-                # experiment.log({
-                #     'train loss': loss.item(),
-                #     'step': global_step,
-                #     'epoch': epoch
-                # })
+                experiment.log({
+                    'train loss': loss.item(),
+                    'step': global_step,
+                    'epoch': epoch
+                })
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
                 division_step = (n_train // (5 * batch_size))
@@ -98,11 +99,20 @@ def train_model(
                         # print(1)
                         val_score = evaluate(model, val_loader, device, amp)
                         scheduler.step(val_score)
-                        logging.info('Validation Dice mask score: {}'.format(val_score))
+                        logging.info('Accuracy score: {}'.format(val_score))
                         state_dict = model.state_dict()
                         torch.save(state_dict, str('model.pth'))
                         if val_score > best_score:
                             best_score = val_score
                             torch.save(state_dict, str('best_model.pth'))
                             logging.info(f'Best saved! score: {best_score}')
-
+                        try:
+                            experiment.log({
+                                'learning rate': optimizer.param_groups[0]['lr'],
+                                'validation Accuracy': best_score,
+                                'step': global_step,
+                                'epoch': epoch,
+                                # **histograms
+                            })
+                        except:
+                            pass

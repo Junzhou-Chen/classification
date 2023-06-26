@@ -187,7 +187,6 @@ if __name__ == '__main__':
     logging.info(f'Using device {device}')
     model = resnet50(10)
     
-    model.to(device=device)
 
     try:
         train_model(
