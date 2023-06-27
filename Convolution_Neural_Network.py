@@ -14,6 +14,7 @@ from train import train_model
 from torch.utils.data import DataLoader
 from NetWork import Vgg16_net
 from torchvision import models
+from pathlib import Path
 # todo Bottleneck
 class Bottleneck(nn.Module):
     """
@@ -148,6 +149,7 @@ def resnet50(num_classes=10):
 def read_data():
     # 这里可自行修改数据预处理，batch大小也可自行调整
     # 保持本地训练的数据读取和这里一致
+    Path(r'./data/CIFAR10').mkdir(parents=True, exist_ok=True)
     dataset_train = torchvision.datasets.CIFAR10(root='./data/CIFAR10', train=True, download=True,
                                                  transform=torchvision.transforms.ToTensor())
     dataset_val = torchvision.datasets.CIFAR10(root='./data/CIFAR10', train=False, download=True,
@@ -185,7 +187,9 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
-    model = resnet50(10)
+    model = models.resnet50(pretrained=True)
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, 10)
     model.to(device=device)
 
     try:
