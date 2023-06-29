@@ -55,7 +55,7 @@ def train_model(
     grad_scaler = torch.cuda.amp.GradScaler(enabled=amp)
     criterion = nn.CrossEntropyLoss()
     global_step = 0
-    best_score = -1
+    best_score = 0
     for epoch in range(1, epochs + 1):
         model.train()
         epoch_loss = 0
@@ -94,17 +94,18 @@ def train_model(
                         logging.info('Accuracy score: {}'.format(val_score))
                         state_dict = model.state_dict()
                         torch.save(state_dict, str('model.pth'))
-                        if val_score > best_score:
-                            best_score = val_score
-                            torch.save(state_dict, str('best_model.pth'))
-                            logging.info(f'Best saved! score: {best_score}')
                         try:
                             experiment.log({
                                 'learning rate': optimizer.param_groups[0]['lr'],
-                                'validation Accuracy': best_score,
+                                'validation Accuracy': val_score,
                                 'step': global_step,
                                 'epoch': epoch,
                                 # **histograms
                             })
                         except:
                             pass
+                        if val_score > best_score:
+                            best_score = val_score
+                            torch.save(state_dict, str('best_model.pth'))
+                            logging.info(f'Best saved! score: {best_score}')
+
