@@ -25,13 +25,13 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    dataset_train, dataset_val, _, _ = read_data(args.data_path, args.batch_size)
+    dataset_train, dataset_val, dataset_loader = read_data(args.data_path, args.batch_size)
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
 
-    model_ftrs = model(args.model, stage='train')
+    model_ftrs = model(args.model, stage='train', dataloaders=dataset_loader)
     model_ftrs.to(device=device)
     logging.info(f'Using model: {args.model}')
     try:

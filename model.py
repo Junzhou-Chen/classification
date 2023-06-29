@@ -1,10 +1,9 @@
 from torchvision import models
-from utils.dataloader import dataloaders
 import torch
 import torch.nn as nn
 
 
-def model(model_name:str, stage: str, model_path: str = ''):
+def model(model_name:str, stage: str, dataloaders, model_path: str = ''):
     if model_name == 'resnet50':
         model = models.resnet50(pretrained=True)
         num_ftrs = model.fc.in_features

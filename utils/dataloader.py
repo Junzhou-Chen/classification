@@ -41,6 +41,5 @@ dataloaders = {
 
 dataloaders['train_size'] = len(train_dataset)
 dataloaders['val_size'] = len(val_dataset)
-# dataloaders['test_size'] = len(test_dataset)
 dataloaders['datasets'] = image_datasets
 dataloaders['classes'] = len(train_dataset.classes)

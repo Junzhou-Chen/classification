@@ -608,8 +608,24 @@ def read_data(data_dir, batch_size):
     # 保持本地训练的数据读取和这里一致
     train_dataset = datasets.ImageFolder(train_data_dir, dataTrans)
     val_dataset = datasets.ImageFolder(val_data_dir, dataTrans)
-    data_loader_train = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
-                                                    num_workers=os.cpu_count())
-    data_loader_val = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True,
-                                                  drop_last=True, num_workers=os.cpu_count())
-    return train_dataset, val_dataset, data_loader_train, data_loader_val
+
+    image_datasets = dict(train=train_dataset, val=val_dataset)
+
+    dataloaders = {
+        x: torch.utils.data.DataLoader(
+            dataset=image_datasets[x],
+            batch_size=16,
+            shuffle=True,
+            num_workers=24
+        ) for x in ['train', 'val']
+    }
+
+    dataloaders['train_size'] = len(train_dataset)
+    dataloaders['val_size'] = len(val_dataset)
+    dataloaders['datasets'] = image_datasets
+    dataloaders['classes'] = len(train_dataset.classes)
+    # data_loader_train = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
+    #                                                 num_workers=os.cpu_count())
+    # data_loader_val = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True,
+    #                                               drop_last=True, num_workers=os.cpu_count())
+    return train_dataset, val_dataset, dataloaders
