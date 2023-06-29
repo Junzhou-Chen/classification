@@ -1,26 +1,8 @@
-import os
 import argparse
 import logging
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torchvision
-from train import train_model
-from torch.utils.data import DataLoader
-from NetWork import Vgg16_net
-from torchvision import models
-
-
-def read_data():
-    # 这里可自行修改数据预处理，batch大小也可自行调整
-    # 保持本地训练的数据读取和这里一致
-    dataset_train = torchvision.datasets.CIFAR10(root='./data/CIFAR10', train=True, download=True,
-                                                 transform=torchvision.transforms.ToTensor())
-    dataset_val = torchvision.datasets.CIFAR10(root='./data/CIFAR10', train=False, download=True,
-                                               transform=torchvision.transforms.ToTensor())
-    data_loader_train = DataLoader(dataset=dataset_train, batch_size=256, shuffle=True)
-    data_loader_val = DataLoader(dataset=dataset_val, batch_size=256, shuffle=False)
-    return dataset_train, dataset_val, data_loader_train, data_loader_val
+from utils.utils import *
+from train2 import train_model
+from model import model
 
 
 def get_args():
@@ -30,6 +12,11 @@ def get_args():
     parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-6,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
+    parser.add_argument('--model', '-m', type=str, default='resnet50',
+                        help='Choose from resnet50, resnet101, resnet152, alexnet, convnext_tiny, connect_base, '
+                             'google_net, convnext_large')
+    parser.add_argument('--data-path', '-p', dest='data_path', type=str, default=r'G:\Dataset\classification',
+                        help='Dataset path')
     parser.add_argument('--amp', action='store_true', default=True, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
     parser.add_argument('--classes', '-c', type=int, default=10, help='Number of classes')
@@ -37,18 +24,16 @@ def get_args():
 
 
 if __name__ == '__main__':
-    dataset_train, dataset_val, data_loader_train, data_loader_val = read_data()
-
     args = get_args()
+    dataset_train, dataset_val, data_loader_train, data_loader_val = read_data(args.data_path, args.batch_size)
+
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
     # model = resnet50(10)
-    model = models.resnet50(pretrained=True)
-    # model.fc = 10
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, 10)
-    model.to(device=device)
+    # model = models.resnet50(pretrained=True)
+    num_ftrs = model(args.model, stage='train')
+    num_ftrs.to(device=device)
 
     try:
         train_model(
@@ -59,14 +44,15 @@ if __name__ == '__main__':
             train_set=dataset_train,
             val_set=dataset_val,
             device=device,
-            amp=args.amp
+            amp=args.amp,
+            args=args,
         )
     except torch.cuda.OutOfMemoryError:
         logging.error('Detected OutOfMemoryError! '
                       'Enabling checkpointing to reduce memory usage, but this slows down training. '
                       'Consider enabling AMP (--amp) for fast and memory efficient training')
         torch.cuda.empty_cache()
-        model.use_checkpointing()
+
         train_model(
             model=model,
             epochs=args.epochs,
@@ -75,5 +61,6 @@ if __name__ == '__main__':
             train_set=dataset_train,
             val_set=dataset_val,
             device=device,
-            amp=args.amp
+            amp=args.amp,
+            args=args,
         )

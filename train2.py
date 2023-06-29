@@ -13,6 +13,7 @@ def train_model(
         device,
         train_set,
         val_set,
+        args,
         epochs: int = 20,
         batch_size: int = 128,
         learning_rate: float = 1e-5,
