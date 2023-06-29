@@ -8,7 +8,7 @@ from model import model
 def get_args():
     parser = argparse.ArgumentParser(description='Train the HARUNet on images and target masks')
     parser.add_argument('--epochs', '-e', metavar='E', type=int, default=100, help='Number of epochs')
-    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=64, help='Batch size')
+    parser.add_argument('--batch-size', '-b', dest='batch_size', metavar='B', type=int, default=16, help='Batch size')
     parser.add_argument('--learning-rate', '-l', metavar='LR', type=float, default=1e-6,
                         help='Learning rate', dest='lr')
     parser.add_argument('--load', '-f', type=str, default=False, help='Load model from a .pth file')
@@ -25,19 +25,18 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    dataset_train, dataset_val, data_loader_train, data_loader_val = read_data(args.data_path, args.batch_size)
+    dataset_train, dataset_val, _, _ = read_data(args.data_path, args.batch_size)
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
-    # model = resnet50(10)
-    # model = models.resnet50(pretrained=True)
+
     num_ftrs = model(args.model, stage='train')
     num_ftrs.to(device=device)
-
+    logging.info(f'Using model: {args.model}')
     try:
         train_model(
-            model=model,
+            model=num_ftrs,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,

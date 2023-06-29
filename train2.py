@@ -26,29 +26,24 @@ def train_model(
     n_train = len(train_set)
 
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(dataset=val_set, batch_size=batch_size, shuffle=False)
-
-    # loader_args = dict(batch_size=batch_size, num_workers=os.cpu_count(), pin_memory=True)
-    # train_loader = DataLoader(train_set, shuffle=True, **loader_args)
-    # val_loader = DataLoader(val_set, shuffle=False, drop_last=True, **loader_args)
+    val_loader = DataLoader(dataset=val_set, batch_size=batch_size, drop_last=True, shuffle=False)
 
     # (Initialize logging)
-    experiment = wandb.init(project='ResNet', resume='allow', anonymous='must')
-    experiment.config.update(
-        dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate, amp=amp)
+    # experiment = wandb.init(project=args.model, resume='allow', anonymous='must')
+    # experiment.config.update(
+    #     dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate, amp=amp)
+    # )
+    logging.basicConfig(
+        filename=f'./logs/{args.model}.log',
+        filemode='w',
+        level=logging.INFO,
+        format='[%(levelname)s] %(asctime)s [%(filename)s:%(lineno)d]: %(message)s'
     )
 
-    logging.info(f'''Starting training:
-            Epochs:          {epochs}
-            Batch size:      {batch_size}
-            Learning rate:   {learning_rate}
-            Training size:   {n_train}
-            Validation size: {n_val}
-            Device:          {device.type}
-            Mixed Precision: {amp}
-        ''')
-
     # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
+    # params = list(model.parameters())
+    # optimizer = optim.Adam(params, lr=learning_rate, weight_decay=weight_decay)
+
     optimizer = optim.RMSprop(model.parameters(),
                               lr=learning_rate, weight_decay=weight_decay, momentum=momentum, foreach=True)
     # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -60,12 +55,12 @@ def train_model(
     for epoch in range(1, epochs + 1):
         model.train()
         epoch_loss = 0
+        logging.info(f'Epoch {epochs}/{epoch}')  # 输出到日志
         with tqdm(total=n_train, desc=f'Epoch {epoch}/{epochs}', unit='img') as pbar:
-            for idx, (inputs, labels) in enumerate(train_loader):
+            for data in train_loader:
+                inputs, labels = data
                 inputs = inputs.cuda()
                 labels = labels.cuda()
-                # print(1)
-                # outputs = model(inputs.view(inputs.size(0), -1))
                 pred = model(inputs)
 
                 loss = criterion(pred, labels)
@@ -79,11 +74,13 @@ def train_model(
                 pbar.update(inputs.shape[0])
                 global_step += 1
                 epoch_loss += loss.item()
-                experiment.log({
-                    'train loss': loss.item(),
-                    'step': global_step,
-                    'epoch': epoch
-                })
+
+                # experiment.log({
+                #     'train loss': loss.item(),
+                #     'step': global_step,
+                #     'epoch': epoch
+                # })
+
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
                 division_step = (n_train // (5 * batch_size))
@@ -94,18 +91,22 @@ def train_model(
                         scheduler.step(val_score)
                         logging.info('Accuracy score: {}'.format(val_score))
                         state_dict = model.state_dict()
-                        torch.save(state_dict, str('model.pth'))
+                        torch.save(state_dict, str(f'./pth/{args.model}.pth'))
+
+                        logging.info(f'Train Loss: {epoch_loss / global_step:.4f}')
+                        logging.info(f'Val Acc: {val_score:.4f}')
                         if val_score > best_score:
                             best_score = val_score
-                            torch.save(state_dict, str('best_model.pth'))
+                            torch.save(state_dict, str(f'./pth/{args.model}_best.pth'))
                             logging.info(f'Best saved! score: {best_score}')
-                        try:
-                            experiment.log({
-                                'learning rate': optimizer.param_groups[0]['lr'],
-                                'validation Accuracy': best_score,
-                                'step': global_step,
-                                'epoch': epoch,
-                                # **histograms
-                            })
-                        except:
-                            pass
+                        # try:
+                        #     experiment.log({
+                        #         'learning rate': optimizer.param_groups[0]['lr'],
+                        #         'validation Accuracy': best_score,
+                        #         'step': global_step,
+                        #         'epoch': epoch,
+                        #         # **histograms
+                        #     })
+                        # except:
+                        #     pass
+
