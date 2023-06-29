@@ -1,6 +1,6 @@
 from torchvision import datasets, transforms
 import torch
-
+from torch.utils.data import DataLoader
 # trainTrans = transforms.Compose([
 #     transforms.Resize([299, 299]),  # resize  长宽不一致
 #     # transforms.CenterCrop(224),  # 在图片的中间区域进行裁剪
@@ -21,14 +21,14 @@ import torch
 data_dir = r'G:\Dataset\classification'
 train_data_dir = f'{data_dir}/train'
 val_data_dir = f'{data_dir}/val'
-test_data_dir = f'{data_dir}/test'
+# test_data_dir = f'{data_dir}/test'
 
 # 通用数据加载器
 train_dataset = datasets.ImageFolder(train_data_dir)
 val_dataset = datasets.ImageFolder(val_data_dir)
-test_dataset = datasets.ImageFolder(test_data_dir)
+# test_dataset = datasets.ImageFolder(test_data_dir)
 
-image_datasets = dict(train=train_dataset, val=val_dataset, test=test_dataset)
+image_datasets = dict(train=train_dataset, val=val_dataset)
 
 dataloaders = {
     x: torch.utils.data.DataLoader(
@@ -36,11 +36,11 @@ dataloaders = {
         batch_size=16,
         shuffle=True,
         num_workers=24
-    ) for x in ['train', 'val', 'test']
+    ) for x in ['train', 'val']
 }
 
 dataloaders['train_size'] = len(train_dataset)
 dataloaders['val_size'] = len(val_dataset)
-dataloaders['test_size'] = len(test_dataset)
+# dataloaders['test_size'] = len(test_dataset)
 dataloaders['datasets'] = image_datasets
 dataloaders['classes'] = len(train_dataset.classes)

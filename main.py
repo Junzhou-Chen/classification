@@ -31,12 +31,12 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info(f'Using device {device}')
 
-    num_ftrs = model(args.model, stage='train')
-    num_ftrs.to(device=device)
+    model_ftrs = model(args.model, stage='train')
+    model_ftrs.to(device=device)
     logging.info(f'Using model: {args.model}')
     try:
         train_model(
-            model=num_ftrs,
+            model=model_ftrs,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,
@@ -53,7 +53,7 @@ if __name__ == '__main__':
         torch.cuda.empty_cache()
 
         train_model(
-            model=model,
+            model=model_ftrs,
             epochs=args.epochs,
             batch_size=args.batch_size,
             learning_rate=args.lr,

@@ -22,17 +22,17 @@ def train_model(
         momentum: float = 0.999,
         gradient_clipping: float = 1.0,
 ):
-    n_val = len(val_set)
     n_train = len(train_set)
 
     train_loader = DataLoader(dataset=train_set, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(dataset=val_set, batch_size=batch_size, drop_last=True, shuffle=False)
 
     # (Initialize logging)
-    # experiment = wandb.init(project=args.model, resume='allow', anonymous='must')
-    # experiment.config.update(
-    #     dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate, amp=amp)
-    # )
+    experiment = wandb.init(project=args.model, resume='allow', anonymous='must')
+    experiment.config.update(
+        dict(epochs=epochs, batch_size=batch_size, learning_rate=learning_rate, amp=amp)
+    )
+
     logging.basicConfig(
         filename=f'./logs/{args.model}.log',
         filemode='w',
@@ -40,7 +40,7 @@ def train_model(
         format='[%(levelname)s] %(asctime)s [%(filename)s:%(lineno)d]: %(message)s'
     )
 
-    # 4. Set up the optimizer, the loss, the learning rate scheduler and the loss scaling for AMP
+    # 4. Set up the optimi   zer, the loss, the learning rate scheduler and the loss scaling for AMP
     # params = list(model.parameters())
     # optimizer = optim.Adam(params, lr=learning_rate, weight_decay=weight_decay)
 
@@ -75,11 +75,11 @@ def train_model(
                 global_step += 1
                 epoch_loss += loss.item()
 
-                # experiment.log({
-                #     'train loss': loss.item(),
-                #     'step': global_step,
-                #     'epoch': epoch
-                # })
+                experiment.log({
+                    'train loss': loss.item(),
+                    'step': global_step,
+                    'epoch': epoch
+                })
 
                 pbar.set_postfix(**{'loss (batch)': loss.item()})
 
@@ -88,25 +88,26 @@ def train_model(
                     if global_step % division_step == 0:
                         # print(1)
                         val_score = evaluate(model, val_loader, device, amp)
+                        logging.info(f'Val Acc: {val_score:.4f}')
+
                         scheduler.step(val_score)
                         logging.info('Accuracy score: {}'.format(val_score))
                         state_dict = model.state_dict()
                         torch.save(state_dict, str(f'./pth/{args.model}.pth'))
 
                         logging.info(f'Train Loss: {epoch_loss / global_step:.4f}')
-                        logging.info(f'Val Acc: {val_score:.4f}')
+
                         if val_score > best_score:
                             best_score = val_score
                             torch.save(state_dict, str(f'./pth/{args.model}_best.pth'))
                             logging.info(f'Best saved! score: {best_score}')
-                        # try:
-                        #     experiment.log({
-                        #         'learning rate': optimizer.param_groups[0]['lr'],
-                        #         'validation Accuracy': best_score,
-                        #         'step': global_step,
-                        #         'epoch': epoch,
-                        #         # **histograms
-                        #     })
-                        # except:
-                        #     pass
+                        experiment.log({
+                            'learning rate': optimizer.param_groups[0]['lr'],
+                            'validation Accuracy': best_score,
+                            'step': global_step,
+                            'epoch': epoch,
+                            # **histograms
+                        })
+
+
 
