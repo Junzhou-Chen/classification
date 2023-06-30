@@ -1,7 +1,7 @@
 import argparse
 import logging
 from utils.utils import *
-from train2 import train_model
+from train import train_model
 from model import model
 
 
