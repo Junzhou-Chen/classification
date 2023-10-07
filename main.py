@@ -15,11 +15,11 @@ def get_args():
     parser.add_argument('--model', '-m', type=str, default='resnet50',
                         help='Choose from resnet50, resnet101, resnet152, alexnet, convnext_tiny, connect_base, '
                              'google_net, convnext_large')
-    parser.add_argument('--data-path', '-p', dest='data_path', type=str, default=r'G:\Dataset\classification',
+    parser.add_argument('--data-path', '-p', dest='data_path', type=str, default=r'G:\Dataset\Herlev-cls',
                         help='Dataset path')
     parser.add_argument('--amp', action='store_true', default=True, help='Use mixed precision')
     parser.add_argument('--bilinear', action='store_true', default=False, help='Use bilinear upsampling')
-    parser.add_argument('--classes', '-c', type=int, default=10, help='Number of classes')
+    parser.add_argument('--classes', '-c', type=int, default=5, help='Number of classes')
     return parser.parse_args()
 
 

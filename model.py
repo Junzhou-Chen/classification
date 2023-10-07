@@ -36,6 +36,8 @@ def model(model_name:str, stage: str, dataloaders, model_path: str = ''):
         model = models.convnext_large(pretrained=True)
         num_ftrs = model.classifier[2].in_features
         model.classifier[2] = nn.Linear(num_ftrs, dataloaders['classes'])
+    else:
+        model = None
     if stage == 'test':
         model.load_state_dict(torch.load(model_path, map_location='cpu'))
         model.eval()

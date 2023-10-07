@@ -96,18 +96,18 @@ def train_model(
                         torch.save(state_dict, str(f'./pth/{args.model}.pth'))
 
                         logging.info(f'Train Loss: {epoch_loss / global_step:.4f}')
-
-                        if val_score > best_score:
-                            best_score = val_score
-                            torch.save(state_dict, str(f'./pth/{args.model}_best.pth'))
-                            logging.info(f'Best saved! score: {best_score}')
                         experiment.log({
                             'learning rate': optimizer.param_groups[0]['lr'],
-                            'validation Accuracy': best_score,
+                            'validation Accuracy': val_score,
                             'step': global_step,
                             'epoch': epoch,
                             # **histograms
                         })
+                        if val_score > best_score:
+                            best_score = val_score
+                            torch.save(state_dict, str(f'./pth/{args.model}_best.pth'))
+                            logging.info(f'Best saved! score: {best_score}')
+
 
 
 

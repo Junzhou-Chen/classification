@@ -1,5 +1,5 @@
 from utils.utils import *
 
-dataset_path = r'G:\Dataset\Herlev/'
-dataset_save_path = r'G:\Dataset\classification/'
-dataset_partition2(dataset_path, dataset_save_path, 0.7, 0.3)
+dataset_path = r'G:\Dataset\BloodVessels\Zeiss_Visucam_500/'
+dataset_save_path = r'G:\Dataset\test\Zeiss_Visucam_500/'
+dataset_partition2(dataset_path, dataset_save_path, 0, 1)

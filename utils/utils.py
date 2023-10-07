@@ -307,8 +307,8 @@ def dataset_partition2(src_path: str, dst_path: str, train_split_rate: float, te
     move_file(train_data_root, train_split_rate, 'train')
 
     # 建立保存测试集的文件夹
-    test_data_root = os.path.join(dst_path, 'test')
-    move_file(test_data_root, test_split_rate, 'test')
+    test_data_root = os.path.join(dst_path, 'val')
+    move_file(test_data_root, test_split_rate, 'val')
 
     # rmtree(src_path)
     print('Partition successfully!')
@@ -629,3 +629,28 @@ def read_data(data_dir, batch_size):
     # data_loader_val = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True,
     #                                               drop_last=True, num_workers=os.cpu_count())
     return train_dataset, val_dataset, dataloaders
+
+
+def read_test_data(data_dir, batch_size):
+    val_data_dir = f'{data_dir}/val'
+    # test_data_dir = f'{data_dir}/test'
+    # 这里可自行修改数据预处理，batch大小也可自行调整
+    # 保持本地训练的数据读取和这里一致
+    val_dataset = datasets.ImageFolder(val_data_dir, dataTrans)
+    image_datasets = dict(val=val_dataset)
+    dataloaders = {
+        x: torch.utils.data.DataLoader(
+            dataset=image_datasets[x],
+            batch_size=16,
+            shuffle=True,
+            num_workers=24
+        ) for x in ['val']
+    }
+    dataloaders['val_size'] = len(val_dataset)
+    dataloaders['datasets'] = image_datasets
+    dataloaders['classes'] = len(val_dataset.classes)
+    # data_loader_train = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
+    #                                                 num_workers=os.cpu_count())
+    # data_loader_val = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True,
+    #                                               drop_last=True, num_workers=os.cpu_count())
+    return val_dataset, dataloaders
