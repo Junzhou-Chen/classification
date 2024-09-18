@@ -43,7 +43,7 @@ optional arguments:
 
 
 
-Set file path: Put the original image, mask and edge in a separate folder, and set dir_img, dir_mask and dir_edge on lines 23 to 27 in the train.py
+
 
 Training:
 
