@@ -21,7 +21,7 @@ pip install -r requirements.txt
 **Note : Use Python 3.6 or newer**
 
 ```conosle
-> python train.py -h
+> python main.py -h
 usage: train.py [-h] [--epochs E] [--batch-size B] [--learning-rate LR]
                 [--load LOAD] [--scale SCALE] [--validation VAL] [--amp]
 
