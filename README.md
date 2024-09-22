@@ -22,23 +22,27 @@ pip install -r requirements.txt
 
 ```conosle
 > python main.py -h
-usage: train.py [-h] [--epochs E] [--batch-size B] [--learning-rate LR]
-                [--load LOAD] [--scale SCALE] [--validation VAL] [--amp]
+usage: main.py [-h] [--epochs E] [--batch-size B] [--learning-rate LR] [--load LOAD] [--model MODEL]
+               [--data-path DATA_PATH] [--amp] [--bilinear] [--classes CLASSES]
 
-Train the HARU-Net on images, target masks and target edges
+Train the HARUNet on images and target masks
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   --epochs E, -e E      Number of epochs
   --batch-size B, -b B  Batch size
   --learning-rate LR, -l LR
                         Learning rate
   --load LOAD, -f LOAD  Load model from a .pth file
-  --scale SCALE, -s SCALE
-                        Downscaling factor of the images
-  --validation VAL, -v VAL
-                        Percent of the data that is used as validation (0-100)
+  --model MODEL, -m MODEL
+                        Choose from resnet50, resnet101, resnet152, alexnet, convnext_tiny, connect_base, google_net,
+                        convnext_large
+  --data-path DATA_PATH, -p DATA_PATH
+                        Dataset path
   --amp                 Use mixed precision
+  --bilinear            Use bilinear upsampling
+  --classes CLASSES, -c CLASSES
+                        Number of classes
 ```
 
 
