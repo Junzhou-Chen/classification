@@ -1,9 +1,9 @@
 from torchvision import datasets, transforms
 import torch
 import os
-from torch.utils.data import DataLoader
 from typing import List
-
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
 
 # 绘制混淆矩阵
 def show_confusion_matrix(y_true: List[int or str], y_pre: List[int or str], labels: List[int or str]) -> None:
@@ -149,51 +149,6 @@ def sample(src_path: str, dst_path: str, threshold: int) -> None:
             copy(os.path.join(src_path, cls, file), os.path.join(dst_path, cls))
         print(f'Class {cls} sample successfully!')
     print('Sample successfully!')
-
-
-# def sample(src_path: str, classes: List[str], threshold: int) -> None:
-#     """
-#     :param src_path: 数据集对应的csv文件所在目录
-#     :param classes: 类别列表
-#     :param threshold: 阈值
-#     :return:
-#     """
-#     import os
-#     import pandas as pd
-#     for index, cls in enumerate(classes):
-#         data = pd.read_csv(os.path.join(src_path, f'{cls}.csv'))
-#         num_row = data.shape[0]
-#         num = threshold if num_row >= threshold else num_row
-#         data_sample = data.sample(num, axis=0)
-#
-#         data_sample.insert(data.shape[1], 'class', cls)  # 插入类别列
-#         # print(data_sample)
-#         data_sample.to_csv(os.path.join(src_path, 'sample.csv'), mode='a', index=False,
-#                            header=1 if index == 0 else 0)  # mode=a表示可以追加写入数据,header=0表示不保留列名
-#     print('Sample successfully!')
-#
-#
-# def copy_sample_data(dst_path: str, classes: List[str]) -> None:
-#     """
-#     :param dst_path: 目标路径
-#     :param classes: 类别列表
-#     :return:
-#     """
-#     import os
-#     import pandas as pd
-#     from shutil import copy
-#     if not os.path.exists(dst_path):
-#         os.mkdir(dst_path)
-#     for cls in classes:
-#         path = os.path.join(dst_path, cls)
-#         if not os.path.exists(path):
-#             os.mkdir(path)
-#     path = '/Users/zaizai/Downloads/16-Cls/sample.csv'  # 采样得到的csv文件路径
-#     data = pd.read_csv(path)
-#     for index, row in data.iterrows():  # 按行遍历
-#         src = row['path']
-#         copy(src, os.path.join(dst_path, f'{row["class"]}'))
-#     print('Copy sample data successfully!')
 
 
 def dataset_partition(src_path: str, dst_path: str, train_split_rate: float, val_split_rate: float,
@@ -654,3 +609,23 @@ def read_test_data(data_dir, batch_size):
     # data_loader_val = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True,
     #                                               drop_last=True, num_workers=os.cpu_count())
     return val_dataset, dataloaders
+
+
+class cifarDataset(Dataset):
+    def __init__(self, data, labels):
+        labels = labels.squeeze()  # 去掉多余的维度，使 labels 变为 1D (batch_size,)
+        # labels = labels.long()
+        data = np.transpose(data, (0, 3, 1, 2))
+        # data = data.permute(0, 3, 1, 2)
+        self.data = data
+        self.labels = labels
+
+    def __len__(self):
+        # 返回数据集的大小
+        return len(self.data)
+
+    def __getitem__(self, index):
+        # 根据索引返回一个样本和对应的标签
+        x = self.data[index]
+        y = self.labels[index]
+        return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.long)
