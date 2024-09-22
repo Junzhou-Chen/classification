@@ -3,3 +3,4 @@ numpy
 Pillow>=9.2.0
 tqdm==4.64.1
 wandb
+scikit-learn
